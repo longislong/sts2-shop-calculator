@@ -4,148 +4,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>STS2 ショップ計算機 v6</title>
+<title>STS2 ショップ計算機 v7</title>
 <style>
-  body{
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    margin:0;
-    background:#f3f4f6;
-    color:#111827;
-  }
-  .container{
-    max-width:900px;
-    margin:0 auto;
-    padding:16px;
-  }
-  h1{
-    margin:0 0 12px;
-    font-size:1.5rem;
-  }
-  .card{
-    background:white;
-    border-radius:12px;
-    padding:16px;
-    margin-bottom:16px;
-    box-shadow:0 1px 3px rgba(0,0,0,.08);
-  }
-  .top-grid{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:12px;
-  }
-  @media (min-width:700px){
-    .top-grid{
-      grid-template-columns:1fr 1fr;
-    }
-  }
-  label{
-    display:block;
-    margin-bottom:6px;
-    font-weight:600;
-  }
-  input[type=number]{
-    width:100%;
-    box-sizing:border-box;
-    padding:10px;
-    font-size:1rem;
-    border:1px solid #d1d5db;
-    border-radius:8px;
-  }
-  .checkrow{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-bottom:10px;
-    flex-wrap:wrap;
-  }
-  .checkrow label{
-    margin:0;
-    font-weight:500;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .discount-price{
-    width:110px;
-  }
-  .subnote{
-    margin-left:28px;
-    margin-bottom:10px;
-    font-size:0.9rem;
-    color:#065f46;
-    font-weight:600;
-  }
-  .hidden{
-    display:none;
-  }
-
-  .summary{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:12px;
-    text-align:center;
-  }
-  .summary-box{
-    background:#f9fafb;
-    border-radius:10px;
-    padding:12px;
-  }
-  .summary-box .value{
-    font-size:1.3rem;
-    font-weight:700;
-    line-height:1.4;
-  }
-  .ok{ color:#047857; }
-  .ng{ color:#b91c1c; }
-  .detail{
-    margin-top:6px;
-    font-size:0.85rem;
-    color:#374151;
-  }
-
-  table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:0.95rem;
-  }
-  th, td{
-    border-bottom:1px solid #e5e7eb;
-    padding:8px;
-    text-align:center;
-  }
-  th{
-    background:#f3f4f6;
-  }
-  td:first-child{
-    text-align:left;
-  }
-  tr.can-buy{
-    background:#ecfeff;
-  }
-  tr.cannot-buy{
-    background:#f9fafb;
-    color:#9ca3af;
-  }
-  .section{
-    background:#fef3c7;
-    font-weight:700;
-  }
-
-  /* 購入チェックボックスを大きく */
-  .buy{
-    transform: scale(1.5);
-    cursor: pointer;
-  }
-
-  /* タッチ操作向けに余白を少し広げる */
-  td:last-child{
-    padding:14px 8px;
-  }
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;background:#f3f4f6;color:#111827;}
+  .container{max-width:900px;margin:0 auto;padding:16px;}
+  h1{margin:0 0 12px;font-size:1.5rem;}
+  .card{background:white;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .top-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  @media (min-width:700px){.top-grid{grid-template-columns:1fr 1fr;}}
+  label{display:block;margin-bottom:6px;font-weight:600;}
+  input[type=number]{width:100%;box-sizing:border-box;padding:10px;font-size:1rem;border:1px solid #d1d5db;border-radius:8px;}
+  .checkrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .checkrow label{margin:0;font-weight:500;display:flex;align-items:center;gap:8px;}
+  .discount-price{width:110px;}
+  .subnote{margin-left:28px;margin-bottom:10px;font-size:0.9rem;color:#065f46;font-weight:600;}
+  .hidden{display:none;}
+  .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center;}
+  .summary-box{background:#f9fafb;border-radius:10px;padding:12px;}
+  .summary-box .value{font-size:1.3rem;font-weight:700;line-height:1.4;}
+  .ok{color:#047857;}
+  .ng{color:#b91c1c;}
+  .detail{margin-top:6px;font-size:0.85rem;color:#374151;}
+  table{width:100%;border-collapse:collapse;font-size:0.95rem;}
+  th,td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:center;}
+  th{background:#f3f4f6;}
+  td:first-child{text-align:left;}
+  tr.can-buy{background:#ecfeff;}
+  tr.cannot-buy{background:#f9fafb;color:#9ca3af;}
+  .section{background:#fef3c7;font-weight:700;}
+  .buy{transform:scale(1.5);cursor:pointer;}
+  td:last-child{padding:14px 8px;}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>STS2 ショップ計算機 v6</h1>
+  <h1>STS2 ショップ計算機 v7</h1>
 
   <div class="card top-grid">
     <div>
@@ -154,14 +47,6 @@
     </div>
 
     <div>
-      <div class="checkrow">
-        <label><input type="checkbox" id="ownedMember"> 入店時に会員カード所持（50%）</label>
-      </div>
-
-      <div class="checkrow">
-        <label><input type="checkbox" id="ownedCourier"> 入店時に配達人所持（20%）</label>
-      </div>
-
       <div class="checkrow">
         <label><input type="checkbox" id="buyMember"> 店で会員カードを購入</label>
         <input type="number" id="buyMemberPrice" class="discount-price" placeholder="0" min="0">
@@ -172,42 +57,21 @@
         <input type="number" id="buyCourierPrice" class="discount-price" placeholder="0" min="0">
       </div>
 
-      <div class="subnote hidden" id="courierDiscountView">
-        会員カード割引適用後：0 G
-      </div>
+      <div class="subnote hidden" id="courierDiscountView">会員カード割引適用後：0 G</div>
     </div>
   </div>
 
   <div class="card">
     <div class="summary">
-      <div class="summary-box">
-        <div>初期所持金</div>
-        <div class="value" id="goldView">0</div>
-      </div>
-
-      <div class="summary-box">
-        <div>商品合計</div>
-        <div class="value" id="itemTotalDisplay">0 G</div>
-        <div class="detail" id="itemTotalDetail">0</div>
-      </div>
-
-      <div class="summary-box">
-        <div>残金</div>
-        <div class="value ok" id="remain">0</div>
-      </div>
+      <div class="summary-box"><div>初期所持金</div><div class="value" id="goldView">0</div></div>
+      <div class="summary-box"><div>商品合計</div><div class="value" id="itemTotalDisplay">0 G</div><div class="detail" id="itemTotalDetail">0</div></div>
+      <div class="summary-box"><div>残金</div><div class="value ok" id="remain">0</div></div>
     </div>
   </div>
 
   <div class="card">
     <table>
-      <thead>
-        <tr>
-          <th>種類</th>
-          <th>価格</th>
-          <th>割引後</th>
-          <th>購入</th>
-        </tr>
-      </thead>
+      <thead><tr><th>種類</th><th>価格</th><th>割引後</th><th>購入</th></tr></thead>
       <tbody id="shopBody"></tbody>
     </table>
   </div>
@@ -216,26 +80,13 @@
 <script>
 const rows = [
   {section:"通常カード"},
-  {label:"カード1"},
-  {label:"カード2"},
-  {label:"カード3"},
-  {label:"カード4"},
-  {label:"カード5"},
-
+  {label:"カード1"},{label:"カード2"},{label:"カード3"},{label:"カード4"},{label:"カード5"},
   {section:"無色カード"},
-  {label:"無色1"},
-  {label:"無色2"},
-
+  {label:"無色1"},{label:"無色2"},
   {section:"ショップレリック"},
-  {label:"レリック1"},
-  {label:"レリック2"},
-  {label:"レリック3"},
-
+  {label:"レリック1"},{label:"レリック2"},{label:"レリック3"},
   {section:"ポーション"},
-  {label:"ポーション1"},
-  {label:"ポーション2"},
-  {label:"ポーション3"},
-
+  {label:"ポーション1"},{label:"ポーション2"},{label:"ポーション3"},
   {section:"その他"},
   {label:"カード削除"},
 ];
@@ -244,90 +95,65 @@ const body = document.getElementById("shopBody");
 
 rows.forEach((r, idx)=>{
   if(r.section){
-    const tr = document.createElement("tr");
-    tr.className = "section";
-    tr.innerHTML = `<td colspan="4">${r.section}</td>`;
+    const tr=document.createElement("tr");
+    tr.className="section";
+    tr.innerHTML=`<td colspan="4">${r.section}</td>`;
     body.appendChild(tr);
     return;
   }
-
-  const tr = document.createElement("tr");
-  tr.dataset.index = idx;
-
-  tr.innerHTML = `
-    <td>${r.label}</td>
-    <td><input type="number" placeholder="0" min="0" class="price"></td>
-    <td class="discounted">0</td>
-    <td><input type="checkbox" class="buy"></td>
-  `;
+  const tr=document.createElement("tr");
+  tr.dataset.index=idx;
+  tr.innerHTML=`<td>${r.label}</td><td><input type="number" placeholder="0" min="0" class="price"></td><td class="discounted">0</td><td><input type="checkbox" class="buy"></td>`;
   body.appendChild(tr);
 });
 
-function hasMemberDiscount(){
-  return document.getElementById("ownedMember").checked ||
-         document.getElementById("buyMember").checked;
-}
-
 function getCourierPurchasePrice(){
-  const base = Number(document.getElementById("buyCourierPrice").value || 0);
-  if(hasMemberDiscount()){
-    return Math.floor(base * 0.5);
+  const base=Number(document.getElementById("buyCourierPrice").value||0);
+  if(document.getElementById("buyMember").checked){
+    return Math.floor(base*0.5);
   }
   return base;
 }
 
 function getDiscountRate(){
-  let rate = 1.0;
-
-  if(document.getElementById("ownedMember").checked) rate *= 0.5;
-  if(document.getElementById("ownedCourier").checked) rate *= 0.8;
-  if(document.getElementById("buyMember").checked) rate *= 0.5;
-  if(document.getElementById("buyCourier").checked) rate *= 0.8;
-
+  let rate=1.0;
+  if(document.getElementById("buyMember").checked) rate*=0.5;
+  if(document.getElementById("buyCourier").checked) rate*=0.8;
   return rate;
 }
 
 function recalc(){
-  const gold = Number(document.getElementById("gold").value || 0);
+  const gold=Number(document.getElementById("gold").value||0);
+  const buyMember=document.getElementById("buyMember").checked;
+  const buyCourier=document.getElementById("buyCourier").checked;
 
-  const buyMember = document.getElementById("buyMember").checked;
-  const buyCourier = document.getElementById("buyCourier").checked;
+  let relicTotal=0;
+  if(buyMember) relicTotal+=Number(document.getElementById("buyMemberPrice").value||0);
+  if(buyCourier) relicTotal+=getCourierPurchasePrice();
 
-  let relicTotal = 0;
-
-  if(buyMember){
-    relicTotal += Number(document.getElementById("buyMemberPrice").value || 0);
-  }
-
-  if(buyCourier){
-    relicTotal += getCourierPurchasePrice();
-  }
-
-  const courierView = document.getElementById("courierDiscountView");
-
-  if(buyMember && buyCourier){
-    const courierPrice = getCourierPurchasePrice();
-    courierView.textContent = `会員カード割引適用後：${courierPrice} G`;
+  const courierView=document.getElementById("courierDiscountView");
+  if(buyMember&&buyCourier){
+    courierView.textContent=`会員カード割引適用後：${getCourierPurchasePrice()} G`;
     courierView.classList.remove("hidden");
   }else{
     courierView.classList.add("hidden");
   }
 
-  const rate = getDiscountRate();
+  const rate=getDiscountRate();
 
-  let selectedItemTotal = 0;
-  let remainAfterRelics = gold - relicTotal;
+  let selectedItemTotal=0;
+  let remainAfterRelics=gold-relicTotal;
 
   document.querySelectorAll("#shopBody tr").forEach(tr=>{
-    const priceInput = tr.querySelector(".price");
+    const priceInput=tr.querySelector(".price");
     if(!priceInput) return;
 
-    const price = Number(priceInput.value || 0);
-    const discounted = Math.floor(price * rate);
+    const price=Number(priceInput.value||0);
+    const discounted=Math.floor(price*rate);
 
-    tr.querySelector(".discounted").textContent = discounted;
+    tr.querySelector(".discounted").textContent=discounted;
 
-    if(discounted <= remainAfterRelics){
+    if(discounted<=remainAfterRelics){
       tr.classList.add("can-buy");
       tr.classList.remove("cannot-buy");
     }else{
@@ -336,34 +162,30 @@ function recalc(){
     }
 
     if(tr.querySelector(".buy").checked){
-      selectedItemTotal += discounted;
+      selectedItemTotal+=discounted;
     }
   });
 
-  const grandTotal = selectedItemTotal + relicTotal;
-  const remain = gold - grandTotal;
+  const grandTotal=selectedItemTotal+relicTotal;
+  const remain=gold-grandTotal;
 
-  document.getElementById("goldView").textContent = gold;
+  document.getElementById("goldView").textContent=gold;
+  document.getElementById("itemTotalDisplay").textContent=`${grandTotal} G`;
 
-  document.getElementById("itemTotalDisplay").textContent = `${grandTotal} G`;
-
-  if(relicTotal > 0){
-    document.getElementById("itemTotalDetail").textContent =
-      `${selectedItemTotal} + ${relicTotal} (割引レリック価格) = ${grandTotal}`;
+  if(relicTotal>0){
+    document.getElementById("itemTotalDetail").textContent=`${selectedItemTotal} + ${relicTotal} (割引レリック価格) = ${grandTotal}`;
   }else{
-    document.getElementById("itemTotalDetail").textContent =
-      `${selectedItemTotal}`;
+    document.getElementById("itemTotalDetail").textContent=`${selectedItemTotal}`;
   }
 
-  const remainEl = document.getElementById("remain");
-  remainEl.textContent = remain;
-  remainEl.classList.toggle("ok", remain >= 0);
-  remainEl.classList.toggle("ng", remain < 0);
+  const remainEl=document.getElementById("remain");
+  remainEl.textContent=remain;
+  remainEl.classList.toggle("ok", remain>=0);
+  remainEl.classList.toggle("ng", remain<0);
 }
 
 document.addEventListener("input", recalc);
 document.addEventListener("change", recalc);
-
 recalc();
 </script>
 </body>
