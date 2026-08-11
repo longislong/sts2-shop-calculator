@@ -134,25 +134,30 @@ categories.forEach(c=>{
   createItemRow(c);
 });
 
-function ensureNextRow(input){
-  const row=input.closest("tr.item-row");
-  const key=row.dataset.category;
-  const category=categories.find(c=>c.key===key);
-  if(!category.dynamic || Number(input.value||0)<=0)return;
+function syncCategoryRows(category){
+  let rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${category.key}"]`));
 
-  const rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${key}"]`));
-  if(rows[rows.length-1]===row) createItemRow(category);
-}
+  // 動的カテゴリは常に「最後に空欄を1枠」だけ置く。
+  // 余分な空欄がある場合だけ、末尾から削除する。
+  while(rows.length > 1){
+    const last = rows[rows.length - 1];
+    const prev = rows[rows.length - 2];
 
-function removeExtraEmptyRows(){
-  categories.filter(c=>c.dynamic).forEach(c=>{
-    let rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${c.key}"]`));
-    while(rows.length>1 && Number(rows[rows.length-1].querySelector(".price").value||0)===0){
-      rows[rows.length-1].remove();
-      rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${c.key}"]`));
+    if(Number(last.querySelector(".price").value || 0) === 0 &&
+       Number(prev.querySelector(".price").value || 0) === 0){
+      last.remove();
+      rows = Array.from(document.querySelectorAll(`tr.item-row[data-category="${category.key}"]`));
+    }else{
+      break;
     }
-    renumberCategory(c.key);
-  });
+  }
+
+  const last = rows[rows.length - 1];
+  if(Number(last.querySelector(".price").value || 0) > 0){
+    createItemRow(category);
+  }
+
+  renumberCategory(category.key);
 }
 
 function getCourierPurchasePrice(){
@@ -188,7 +193,9 @@ function recalc(){
     const price=Number(input.value||0);
     const discounted=Math.floor(price*rate);
     tr.querySelector(".discounted").textContent=discounted;
-    if(discounted<=remainAfterRelics){
+    if(price === 0){
+      tr.classList.remove("can-buy","cannot-buy");
+    }else if(discounted<=remainAfterRelics){
       tr.classList.add("can-buy");tr.classList.remove("cannot-buy");
     }else{
       tr.classList.remove("can-buy");tr.classList.add("cannot-buy");
@@ -226,8 +233,11 @@ document.addEventListener("keydown",event=>{
 
 document.addEventListener("input",event=>{
   if(event.target.classList.contains("price")){
-    ensureNextRow(event.target);
-    removeExtraEmptyRows();
+    const row = event.target.closest("tr.item-row");
+    const category = categories.find(c => c.key === row.dataset.category);
+    if(category && category.dynamic){
+      syncCategoryRows(category);
+    }
   }
   recalc();
 });
