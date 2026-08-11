@@ -13,6 +13,18 @@ h1{margin:0 0 12px;font-size:1.5rem}
 @media (min-width:700px){.top-grid{grid-template-columns:1fr 1fr}}
 label{display:block;margin-bottom:6px;font-weight:600}
 input[type=number]{width:100%;box-sizing:border-box;padding:10px;font-size:1rem;border:1px solid #d1d5db;border-radius:8px}
+.gold-input{
+  font-size:2rem !important;
+  font-weight:700;
+  background:#eef6ff;
+  border:2px solid #93c5fd !important;
+  padding:12px !important;
+}
+.gold-input:focus{
+  outline:none;
+  border-color:#60a5fa !important;
+  box-shadow:0 0 0 3px rgba(96,165,250,.2);
+}
 .checkrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .checkrow label{margin:0;font-weight:500;display:flex;align-items:center;gap:8px}
 .discount-price{width:110px}
@@ -39,7 +51,7 @@ td:last-child{padding:14px 8px}
 <div class="card top-grid">
   <div>
     <label>所持金</label>
-    <input type="number" id="gold" placeholder="0" min="0">
+    <input type="number" id="gold" class="gold-input" placeholder="0" min="0">
   </div>
   <div>
     <div class="checkrow">
@@ -80,23 +92,68 @@ td:last-child{padding:14px 8px}
 </div>
 
 <script>
-const rows=[
-{section:"通常カード"},{label:"カード1"},{label:"カード2"},{label:"カード3"},{label:"カード4"},{label:"カード5"},
-{section:"無色カード"},{label:"無色1"},{label:"無色2"},
-{section:"ショップレリック"},{label:"レリック1"},{label:"レリック2"},{label:"レリック3"},
-{section:"ポーション"},{label:"ポーション1"},{label:"ポーション2"},{label:"ポーション3"},
-{section:"その他"},{label:"カード削除"}];
+const categories=[
+  {name:"通常カード",key:"cards",dynamic:true},
+  {name:"無色カード",key:"colorless",dynamic:true},
+  {name:"レリック",key:"relics",dynamic:true},
+  {name:"ポーション",key:"potions",dynamic:true},
+  {name:"その他",key:"other",dynamic:false}
+];
 
 const body=document.getElementById("shopBody");
-rows.forEach((r,idx)=>{
-  if(r.section){
-    const tr=document.createElement("tr");tr.className="section";
-    tr.innerHTML=`<td colspan="4">${r.section}</td>`;body.appendChild(tr);return;
-  }
-  const tr=document.createElement("tr");tr.dataset.index=idx;
-  tr.innerHTML=`<td>${r.label}</td><td><input type="number" placeholder="0" min="0" class="price"></td><td class="discounted">0</td><td><input type="checkbox" class="buy"></td>`;
+
+function createSection(category){
+  const tr=document.createElement("tr");
+  tr.className="section";
+  tr.dataset.section=category.key;
+  tr.innerHTML=`<td colspan="4">${category.name}</td>`;
   body.appendChild(tr);
+}
+
+function createItemRow(category){
+  const tr=document.createElement("tr");
+  tr.className="item-row";
+  tr.dataset.category=category.key;
+  tr.innerHTML=`<td class="item-name"></td><td><input type="number" placeholder="0" min="0" class="price"></td><td class="discounted">0</td><td><input type="checkbox" class="buy"></td>`;
+  body.appendChild(tr);
+  renumberCategory(category.key);
+  return tr;
+}
+
+function renumberCategory(key){
+  const rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${key}"]`));
+  const category=categories.find(c=>c.key===key);
+  rows.forEach((tr,i)=>{
+    tr.querySelector(".item-name").textContent=
+      key==="other" ? "カード削除" : `${category.name}${i+1}`;
+  });
+}
+
+categories.forEach(c=>{
+  createSection(c);
+  createItemRow(c);
 });
+
+function ensureNextRow(input){
+  const row=input.closest("tr.item-row");
+  const key=row.dataset.category;
+  const category=categories.find(c=>c.key===key);
+  if(!category.dynamic || Number(input.value||0)<=0)return;
+
+  const rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${key}"]`));
+  if(rows[rows.length-1]===row) createItemRow(category);
+}
+
+function removeExtraEmptyRows(){
+  categories.filter(c=>c.dynamic).forEach(c=>{
+    let rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${c.key}"]`));
+    while(rows.length>1 && Number(rows[rows.length-1].querySelector(".price").value||0)===0){
+      rows[rows.length-1].remove();
+      rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${c.key}"]`));
+    }
+    renumberCategory(c.key);
+  });
+}
 
 function getCourierPurchasePrice(){
   const base=Number(document.getElementById("buyCourierPrice").value||0);
@@ -126,7 +183,7 @@ function recalc(){
   let selectedItemTotal=0;
   const remainAfterRelics=gold-relicTotal;
 
-  document.querySelectorAll("#shopBody tr").forEach(tr=>{
+  document.querySelectorAll("#shopBody tr.item-row").forEach(tr=>{
     const input=tr.querySelector(".price");if(!input)return;
     const price=Number(input.value||0);
     const discounted=Math.floor(price*rate);
@@ -164,6 +221,30 @@ document.addEventListener("keydown",event=>{
     event.preventDefault();
     prices[i+1].focus();
     prices[i+1].select();
+  }
+});
+
+document.addEventListener("input",event=>{
+  if(event.target.classList.contains("price")){
+    ensureNextRow(event.target);
+    removeExtraEmptyRows();
+  }
+  recalc();
+});
+
+// 価格欄のTabは購入チェックを飛ばして次の価格欄へ。
+document.addEventListener("keydown",event=>{
+  if(event.key!=="Tab"||!event.target.classList.contains("price"))return;
+  const prices=Array.from(document.querySelectorAll("#shopBody .price"));
+  const i=prices.indexOf(event.target);
+  if(!event.shiftKey && i>=0 && i<prices.length-1){
+    event.preventDefault();
+    prices[i+1].focus();
+    prices[i+1].select();
+  }else if(event.shiftKey && i>0){
+    event.preventDefault();
+    prices[i-1].focus();
+    prices[i-1].select();
   }
 });
 
