@@ -38,6 +38,23 @@ input[type=number]{width:100%;box-sizing:border-box;padding:10px;font-size:1rem;
 table{width:100%;border-collapse:collapse;font-size:.95rem}
 th,td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:center}
 th{background:#f3f4f6}td:first-child{text-align:left}
+.item-name{
+  cursor:pointer;
+  display:inline-block;
+  min-width:120px;
+  padding:2px 4px;
+  border-radius:4px;
+}
+.item-name:hover{
+  background:#f3f4f6;
+  text-decoration:underline;
+}
+.name-editor{
+  width:100%;
+  box-sizing:border-box;
+  padding:4px 6px;
+  font-size:.95rem;
+}
 tr.can-buy{background:#ecfeff}tr.cannot-buy{background:#f9fafb;color:#9ca3af}
 .section{background:#fef3c7;font-weight:700}
 .buy{transform:scale(1.5);cursor:pointer}
@@ -114,7 +131,7 @@ function createItemRow(category, beforeNode=null){
   const tr=document.createElement("tr");
   tr.className="item-row";
   tr.dataset.category=category.key;
-  tr.innerHTML=`<td class="item-name"></td><td><input type="number" placeholder="0" min="0" class="price"></td><td class="discounted">0</td><td><input type="checkbox" class="buy"></td>`;
+  tr.innerHTML=`<td><span class="item-name"></span></td><td><input type="number" placeholder="0" min="0" class="price"></td><td class="discounted">0</td><td><input type="checkbox" class="buy"></td>`;
 
   if(beforeNode){
     body.insertBefore(tr, beforeNode);
@@ -141,9 +158,14 @@ function createItemRow(category, beforeNode=null){
 function renumberCategory(key){
   const rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${key}"]`));
   const category=categories.find(c=>c.key===key);
+
   rows.forEach((tr,i)=>{
-    tr.querySelector(".item-name").textContent=
-      key==="other" ? "カード削除" : `${category.name}${i+1}`;
+    const defaultName = key==="other" ? "カード削除" : `${category.name}${i+1}`;
+    tr.dataset.defaultName = defaultName;
+
+    if(!tr.dataset.customName){
+      tr.querySelector(".item-name").textContent = defaultName;
+    }
   });
 }
 
@@ -199,6 +221,56 @@ function getDiscountRate(){
   if(document.getElementById("buyCourier").checked)rate*=.8;
   return rate;
 }
+
+// アイテム名クリックで編集
+document.addEventListener("click", event => {
+  const span = event.target.closest(".item-name");
+  if(!span) return;
+
+  const row = span.closest("tr.item-row");
+  if(!row) return;
+
+  // 既に編集中なら何もしない
+  if(row.querySelector(".name-editor")) return;
+
+  const current = row.dataset.customName || "";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "name-editor";
+  input.value = current;
+  input.placeholder = row.dataset.defaultName || "";
+
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const finish = (commit=true) => {
+    let value = commit ? input.value.trim() : current;
+
+    if(value === ""){
+      row.dataset.customName = "";
+      value = row.dataset.defaultName || "";
+    }else{
+      row.dataset.customName = value;
+    }
+
+    const newSpan = document.createElement("span");
+    newSpan.className = "item-name";
+    newSpan.textContent = value;
+    input.replaceWith(newSpan);
+  };
+
+  input.addEventListener("keydown", e => {
+    if(e.key === "Enter"){
+      finish(true);
+    }else if(e.key === "Escape"){
+      finish(false);
+    }
+  });
+
+  input.addEventListener("blur", () => finish(true));
+});
+
 function recalc(){
   const gold=Number(document.getElementById("gold").value||0);
   const buyMember=document.getElementById("buyMember").checked;
@@ -245,10 +317,10 @@ function recalc(){
   const detail=relicTotal>0?`${selectedItemTotal} + ${relicTotal} (割引レリック価格) = ${grandTotal}`:`${selectedItemTotal}`;
 
   document.getElementById("goldView").textContent=gold;
-  document.getElementById("itemTotalDisplay").textContent=`${grandTotal} G`;
+  document.getElementById("itemTotalDisplay").textContent=`${grandTotal}`;
   document.getElementById("itemTotalDetail").textContent=detail;
   document.getElementById("goldViewBottom").textContent=gold;
-  document.getElementById("itemTotalDisplayBottom").textContent=`${grandTotal} G`;
+  document.getElementById("itemTotalDisplayBottom").textContent=`${grandTotal}`;
   document.getElementById("itemTotalDetailBottom").textContent=detail;
 
   [document.getElementById("remain"),document.getElementById("remainBottom")].forEach(el=>{
