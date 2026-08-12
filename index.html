@@ -77,7 +77,6 @@ th{background:#f3f4f6}td:first-child{text-align:left}
   padding:4px 6px;
   font-size:.95rem;
 }
-tr.can-buy{background:#ecfeff}tr.cannot-buy{background:#f9fafb;color:#9ca3af}
 .section{background:#fef3c7;font-weight:700}
 .buy{transform:scale(1.5);cursor:pointer}
 td:last-child{padding:14px 8px}
@@ -97,11 +96,11 @@ td:last-child{padding:14px 8px}
   </div>
   <div>
     <div class="checkrow">
-      <label><input type="checkbox" id="buyMember"> 店で会員カードを購入</label>
+      <label><input type="checkbox" id="buyMember"> 会員カードを購入する場合の販売価格</label>
       <input type="number" id="buyMemberPrice" class="discount-price" placeholder="0" min="0">
     </div>
     <div class="checkrow">
-      <label><input type="checkbox" id="buyCourier"> 店で配達人を購入</label>
+      <label><input type="checkbox" id="buyCourier"> 配達人を購入する場合の販売価格</label>
       <input type="number" id="buyCourierPrice" class="discount-price" placeholder="0" min="0">
     </div>
     <div class="subnote hidden" id="courierDiscountView">会員カード割引適用後：0 G</div>
@@ -135,10 +134,10 @@ td:last-child{padding:14px 8px}
 
 <script>
 const categories=[
-  {name:"通常カード",key:"cards",dynamic:true},
-  {name:"無色カード",key:"colorless",dynamic:true},
-  {name:"レリック",key:"relics",dynamic:true},
-  {name:"ポーション",key:"potions",dynamic:true},
+  {name:"通常カード",key:"cards",dynamic:true,maxRows:5},
+  {name:"無色カード",key:"colorless",dynamic:true,maxRows:2},
+  {name:"レリック",key:"relics",dynamic:true,maxRows:3},
+  {name:"ポーション",key:"potions",dynamic:true,maxRows:2},
   {name:"その他",key:"other",dynamic:false}
 ];
 
@@ -202,6 +201,11 @@ categories.forEach(c=>{
 
 function addCategoryRow(category){
   const rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${category.key}"]`));
+
+  if(category.maxRows && rows.length >= category.maxRows){
+    return null;
+  }
+
   const last=rows[rows.length-1];
   if(last && last.nextSibling){
     return createItemRow(category,last.nextSibling);
@@ -353,26 +357,11 @@ function recalc(){
   let selectedItemTotal=0;
   const remainAfterRelics=gold-relicTotal;
 
-  const hasGoldInput=document.getElementById("gold").value.trim() !== "";
-
   document.querySelectorAll("#shopBody tr.item-row").forEach(tr=>{
     const input=tr.querySelector(".price");if(!input)return;
     const price=Number(input.value||0);
     const discounted=Math.floor(price*rate);
     tr.querySelector(".discounted").textContent=discounted;
-
-    // 所持金が未入力の間は購入可否の色判定をしない。
-    // 所持金を入力したら、従来どおり購入可能/不可能を色で表示する。
-    if(hasGoldInput){
-      if(discounted<=remainAfterRelics){
-        tr.classList.add("can-buy");tr.classList.remove("cannot-buy");
-      }else{
-        tr.classList.remove("can-buy");tr.classList.add("cannot-buy");
-      }
-    }else{
-      tr.classList.remove("can-buy","cannot-buy");
-    }
-
     if(tr.querySelector(".buy").checked)selectedItemTotal+=discounted;
   });
 
