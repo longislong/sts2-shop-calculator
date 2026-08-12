@@ -52,11 +52,12 @@ input[type=number]{width:100%;box-sizing:border-box;padding:10px;font-size:1rem;
 .discount-price{width:110px}
 .subnote{margin-left:28px;margin-bottom:10px;font-size:.9rem;color:#065f46;font-weight:600}
 .hidden{display:none}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center}
-.summary-box{background:#f9fafb;border-radius:10px;padding:12px}
-.summary-box .value{font-size:1.3rem;font-weight:700;line-height:1.4}
+.summary-card{position:sticky;top:0;z-index:20;padding:8px 12px}
+.summary{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;text-align:center}
+.summary-box{background:#f9fafb;border-radius:8px;padding:6px 8px;min-width:0}
+.summary-box .value{font-size:1.05rem;font-weight:700;line-height:1.25}
 .ok{color:#047857}.ng{color:#b91c1c}
-.detail{margin-top:6px;font-size:.85rem;color:#374151}
+.detail{margin-top:2px;font-size:.72rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 table{width:100%;border-collapse:collapse;font-size:.95rem}
 th,td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:center}
 th{background:#f3f4f6}td:first-child{text-align:left}
@@ -79,13 +80,53 @@ th{background:#f3f4f6}td:first-child{text-align:left}
 }
 .section{background:#fef3c7;font-weight:700}
 .buy{transform:scale(1.5);cursor:pointer}
+.buy.can-buy{accent-color:#22c55e;filter:drop-shadow(0 0 2px rgba(34,197,94,.35))}
 td:last-child{padding:14px 8px}
+.export-card{
+  margin-top:24px;
+}
+.export-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:8px;
+}
+.export-title{
+  font-weight:700;
+}
+.copy-button{
+  border:none;
+  border-radius:8px;
+  padding:8px 14px;
+  background:#374151;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+}
+.copy-button:hover{
+  background:#1f2937;
+}
+.export-text{
+  width:100%;
+  min-height:260px;
+  box-sizing:border-box;
+  resize:vertical;
+  padding:12px;
+  border:1px solid #d1d5db;
+  border-radius:8px;
+  background:#fafafa;
+  font-family:"Consolas","Cascadia Mono","MS Gothic",monospace;
+  font-size:.95rem;
+  line-height:1.45;
+  white-space:pre;
+}
 </style>
 </head>
 <body>
 <div class="container">
 <div class="top-bar">
-<h1>STS2 ショップ計算機 v16</h1>
+<h1>STS2 ショップ計算機 v20</h1>
 <button type="button" id="resetAll" class="reset-button">入力を全リセット</button>
 </div>
 
@@ -107,7 +148,7 @@ td:last-child{padding:14px 8px}
   </div>
 </div>
 
-<div class="card">
+<div class="card summary-card">
   <div class="summary">
     <div class="summary-box"><div>初期所持金</div><div class="value" id="goldView">0</div></div>
     <div class="summary-box"><div>商品合計</div><div class="value" id="itemTotalDisplay">0 G</div><div class="detail" id="itemTotalDetail">0</div></div>
@@ -122,13 +163,12 @@ td:last-child{padding:14px 8px}
 </table>
 </div>
 
-<!-- 下までスクロールしても計算結果を確認できるように同じ表示を配置 -->
-<div class="card">
-  <div class="summary">
-    <div class="summary-box"><div>初期所持金</div><div class="value" id="goldViewBottom">0</div></div>
-    <div class="summary-box"><div>商品合計</div><div class="value" id="itemTotalDisplayBottom">0 G</div><div class="detail" id="itemTotalDetailBottom">0</div></div>
-    <div class="summary-box"><div>残金</div><div class="value ok" id="remainBottom">0</div></div>
+<div class="card export-card">
+  <div class="export-header">
+    <div class="export-title">現在の状態</div>
+    <button type="button" id="copyState" class="copy-button">コピー</button>
   </div>
+  <textarea id="stateText" class="export-text" readonly spellcheck="false"></textarea>
 </div>
 </div>
 
@@ -137,7 +177,7 @@ const categories=[
   {name:"通常カード",key:"cards",dynamic:true,maxRows:5},
   {name:"無色カード",key:"colorless",dynamic:true,maxRows:2},
   {name:"レリック",key:"relics",dynamic:true,maxRows:3},
-  {name:"ポーション",key:"potions",dynamic:true,maxRows:2},
+  {name:"ポーション",key:"potions",dynamic:true,maxRows:3},
   {name:"その他",key:"other",dynamic:false}
 ];
 
@@ -287,6 +327,7 @@ document.addEventListener("click", event => {
     newSpan.className = "item-name";
     newSpan.textContent = value;
     input.replaceWith(newSpan);
+    updateStateText();
   };
 
   input.addEventListener("keydown", e => {
@@ -339,6 +380,86 @@ document.getElementById("resetAll").addEventListener("click", () => {
   document.getElementById("gold").focus();
 });
 
+
+function getItemDisplayName(row){
+  return row.dataset.customName || row.dataset.defaultName || "";
+}
+
+function updateStateText(){
+  const goldValue=document.getElementById("gold").value.trim();
+  const gold=Number(goldValue||0);
+  const buyMember=document.getElementById("buyMember").checked;
+  const buyCourier=document.getElementById("buyCourier").checked;
+
+  let relicTotal=0;
+  if(buyMember) relicTotal+=Number(document.getElementById("buyMemberPrice").value||0);
+  if(buyCourier) relicTotal+=getCourierPurchasePrice();
+
+  let selectedItemTotal=0;
+  const categoryLines=[];
+
+  categories.forEach(category=>{
+    const rows=Array.from(document.querySelectorAll(
+      `tr.item-row[data-category="${category.key}"]`
+    ));
+
+    const itemLines=[];
+
+    rows.forEach(row=>{
+      const price=Number(row.querySelector(".price").value||0);
+      if(price<=0) return;
+
+      const rate=getDiscountRate();
+      const displayPrice=Math.floor(price*rate);
+      const checked=row.querySelector(".buy").checked;
+
+      if(checked) selectedItemTotal+=displayPrice;
+
+      // 価格は3桁幅。購入対象には価格の直前に * を付ける。
+      const priceText=String(displayPrice).padStart(3," ");
+      const mark=checked ? "*" : " ";
+      itemLines.push(`${mark}${priceText} ${getItemDisplayName(row)}`);
+    });
+
+    if(itemLines.length){
+      categoryLines.push(category.name);
+      categoryLines.push(...itemLines);
+      categoryLines.push("");
+    }
+  });
+
+  const grandTotal=selectedItemTotal+relicTotal;
+  const remain=gold-grandTotal;
+
+  const lines=[
+    `初期所持金：${gold}`,
+    `商品合計：${grandTotal}`,
+    `残金：${remain}`,
+    ""
+  ];
+
+  lines.push(...categoryLines);
+
+  document.getElementById("stateText").value=lines.join("\n").trimEnd();
+}
+
+document.getElementById("copyState").addEventListener("click", async ()=>{
+  const text=document.getElementById("stateText").value;
+
+  try{
+    await navigator.clipboard.writeText(text);
+    const button=document.getElementById("copyState");
+    const original=button.textContent;
+    button.textContent="コピーしました";
+    setTimeout(()=>button.textContent=original,1200);
+  }catch{
+    const textarea=document.getElementById("stateText");
+    textarea.focus();
+    textarea.select();
+    document.execCommand("copy");
+  }
+});
+
 function recalc(){
   const gold=Number(document.getElementById("gold").value||0);
   const buyMember=document.getElementById("buyMember").checked;
@@ -362,7 +483,18 @@ function recalc(){
     const price=Number(input.value||0);
     const discounted=Math.floor(price*rate);
     tr.querySelector(".discounted").textContent=discounted;
-    if(tr.querySelector(".buy").checked)selectedItemTotal+=discounted;
+
+    const buyCheckbox=tr.querySelector(".buy");
+    const currentRemain=gold-relicTotal-selectedItemTotal;
+
+    // 行の色は変えず、現在の残金で買える商品のチェックだけ明るくする。
+    if(currentRemain>0 && price>0 && discounted<=currentRemain){
+      buyCheckbox.classList.add("can-buy");
+    }else{
+      buyCheckbox.classList.remove("can-buy");
+    }
+
+    if(buyCheckbox.checked)selectedItemTotal+=discounted;
   });
 
   const grandTotal=selectedItemTotal+relicTotal;
@@ -372,13 +504,13 @@ function recalc(){
   document.getElementById("goldView").textContent=gold;
   document.getElementById("itemTotalDisplay").textContent=`${grandTotal}`;
   document.getElementById("itemTotalDetail").textContent=detail;
-  document.getElementById("goldViewBottom").textContent=gold;
-  document.getElementById("itemTotalDisplayBottom").textContent=`${grandTotal}`;
-  document.getElementById("itemTotalDetailBottom").textContent=detail;
 
-  [document.getElementById("remain"),document.getElementById("remainBottom")].forEach(el=>{
-    el.textContent=remain;el.classList.toggle("ok",remain>=0);el.classList.toggle("ng",remain<0);
-  });
+  const remainEl=document.getElementById("remain");
+  remainEl.textContent=remain;
+  remainEl.classList.toggle("ok",remain>=0);
+  remainEl.classList.toggle("ng",remain<0);
+
+  updateStateText();
 }
 
 /* 価格欄ではTabで購入チェックを飛ばし、次の商品価格へ移動 */
