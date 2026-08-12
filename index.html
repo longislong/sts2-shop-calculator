@@ -17,6 +17,75 @@ h1{margin:0 0 12px;font-size:1.5rem}
   margin-bottom:12px;
   gap:12px;
 }
+/* 使い方パネル */
+.help-toggle{
+  width:100%;
+  margin:0 0 12px;
+  padding:10px 14px;
+  border:1px solid #d1d5db;
+  border-radius:8px;
+  background:#f9fafb;
+  color:#111827;
+  font-size:1rem;
+  font-weight:700;
+  text-align:left;
+  cursor:pointer;
+}
+.help-toggle:hover{
+  background:#f3f4f6;
+}
+.help-panel{
+  display:none;
+  margin:0 0 16px;
+  padding:18px 20px;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  line-height:1.7;
+}
+.help-panel.open{
+  display:block;
+}
+.help-panel h2{
+  margin:0 0 10px;
+  font-size:1.25rem;
+}
+.help-panel h3{
+  margin:20px 0 6px;
+  font-size:1.05rem;
+}
+.help-panel p{
+  margin:6px 0 10px;
+}
+.help-panel ul{
+  margin:6px 0 10px;
+  padding-left:1.4em;
+}
+.help-panel pre{
+  margin:8px 0 12px;
+  padding:10px 12px;
+  overflow-x:auto;
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius:6px;
+  font-family:"Consolas","Cascadia Mono","MS Gothic",monospace;
+  line-height:1.45;
+}
+.help-close{
+  display:block;
+  width:100%;
+  margin-top:18px;
+  padding:9px 12px;
+  border:1px solid #d1d5db;
+  border-radius:8px;
+  background:#f3f4f6;
+  font-weight:700;
+  cursor:pointer;
+}
+.help-close:hover{
+  background:#e5e7eb;
+}
+
 .reset-button{
   background:#ef4444;
   color:white;
@@ -161,9 +230,139 @@ td:last-child{padding:14px 8px}
 <body>
 <div class="container">
 <div class="top-bar">
-<h1>STS2 ショップ計算機 v22</h1>
+<h1>STS2 ショップ計算機 v20</h1>
 <button type="button" id="resetAll" class="reset-button">入力を全リセット</button>
 </div>
+
+<button type="button" id="helpToggle" class="help-toggle" aria-expanded="false" aria-controls="helpPanel">
+  使い方
+</button>
+
+<div id="helpPanel" class="help-panel" aria-hidden="true">
+  <h2>STS2 ショップ計算機</h2>
+  <p><strong>ショップで「今持っているお金で、何をどこまで買えるか」を素早く計算するためのブラウザツールです。</strong></p>
+  <p>ショップ画面を見ながら価格を入力し、購入したいものにチェックを入れるだけで、<strong>商品合計・残金・割引適用後の価格</strong>をリアルタイムで確認できます。</p>
+  <p>特に、<strong>会員カード・配達人によるショップ割引を含めて計算したい場合</strong>に便利です。</p>
+
+  <h3>基本的な使い方</h3>
+  <p><strong>1. 所持金を入力</strong></p>
+  <p>画面上部の「所持金」に、現在持っているゴールドを入力します。</p>
+
+  <p><strong>2. ショップの商品価格を入力</strong></p>
+  <p>STS2のショップ画面を見ながら、</p>
+  <ul>
+    <li>通常カード</li>
+    <li>無色カード</li>
+    <li>レリック</li>
+    <li>ポーション</li>
+  </ul>
+  <p>の価格を入力します。</p>
+  <p>最初は各カテゴリ1枠だけ表示されています。価格を入力すると、<strong>そのカテゴリ内に次の入力欄が自動的に追加</strong>されます。</p>
+  <p>ショップの最大枠数に合わせて、</p>
+  <ul>
+    <li>通常カード：最大5枠</li>
+    <li>無色カード：最大2枠</li>
+    <li>レリック：最大3枠</li>
+    <li>ポーション：最大3枠</li>
+  </ul>
+  <p>まで入力できます。カード削除は1枠固定です。</p>
+
+  <h3>商品名も変更できます</h3>
+  <p>「通常カード1」「レリック1」などの商品名部分をクリックすると、名前を変更できます。</p>
+  <p>例えば、</p>
+  <pre>通常カード1 → フットワーク
+レリック1 → 剃刀の牙</pre>
+  <p>のように、ショップ画面を見ながら自分で分かりやすい名前を付けられます。</p>
+  <p>名前を空欄にして確定すると、元の「通常カード1」などの表示に戻ります。</p>
+  <p>なお、名前の変更はその場限りで、ブラウザには保存されません。</p>
+
+  <h3>購入する商品をチェック</h3>
+  <p>実際に購入したい商品には、右端の「購入」チェックを入れます。</p>
+  <p><strong>現在の残金で購入できる商品は、未チェックでもチェックボックスが緑色に強調表示されます。</strong></p>
+  <p>そのため、「これなら今買える」という商品をショップ画面を見ながら直感的に確認できます。</p>
+  <p>購入チェックを入れると、その価格が商品合計に加算され、残金もリアルタイムで更新されます。</p>
+
+  <h3>会員カード・配達人にも対応</h3>
+  <p>ショップで会員カードや配達人を購入する場合は、それぞれの販売価格を入力してチェックします。</p>
+  <p>入力欄の説明に従って、</p>
+  <pre>会員カードを購入する場合の販売価格
+配達人を購入する場合の販売価格</pre>
+  <p>を入力してください。</p>
+
+  <p><strong>会員カード＋配達人を同時に購入する場合</strong></p>
+  <p>会員カードを購入すると、その後に購入する配達人には会員カードの割引が適用されます。</p>
+  <p>そのため、<strong>会員カード → 配達人</strong>の購入順を考慮し、配達人の購入価格を自動的に割引して計算します。</p>
+  <p>また、会員カードと配達人自身には、それぞれの割引を重複して適用するのではなく、<strong>割引購入後の商品に対して割引が適用される</strong>形で計算されます。</p>
+
+  <h3>計算結果は常に確認できます</h3>
+  <p>画面上部には、</p>
+  <ul>
+    <li><strong>初期所持金</strong></li>
+    <li><strong>商品合計</strong></li>
+    <li><strong>商品合計の内訳</strong></li>
+    <li><strong>残金</strong></li>
+  </ul>
+  <p>が表示されています。</p>
+  <p>商品一覧を下へスクロールしても、この計算結果は画面上部に固定されているため、「今いくら残ってる？」を確認するためにいちいち上まで戻る必要がありません。</p>
+
+  <h3>キーボード入力にも対応</h3>
+  <p>商品価格の入力欄で <strong>Tabキー</strong> を押すと、購入チェックボックスを飛ばして、<strong>次の商品価格入力欄</strong>へ移動します。</p>
+  <p>そのため、</p>
+  <pre>価格入力 → Tab → 価格入力 → Tab → …</pre>
+  <p>と、ショップ画面を見ながら連続して価格を入力できます。</p>
+
+  <h3>現在の状態をそのままコピー</h3>
+  <p>ページ下部には「現在の状態」というテキストボックスがあります。</p>
+  <p>ここには現在のショップ状況が自動的に整形されて表示されます。</p>
+  <pre>初期所持金：277
+商品合計：139
+残金：138
+
+通常カード
+  24 通常カード1
+* 48 フットワーク
+  50 剣の舞
+
+無色カード
+  87 無色カード1
+
+レリック
+*256 剃刀の牙
+
+ポーション
+  73 ポーション1</pre>
+  <p><code>*</code> が付いている商品は<strong>購入チェックが入っている商品</strong>です。</p>
+  <p>価格は3桁幅で揃えているため、等幅フォントで見ると一覧として確認しやすくなっています。</p>
+  <p>右上の<strong>「コピー」</strong>ボタンを押せば、そのままクリップボードにコピーできます。</p>
+  <p>Discordやメモ帳などに貼り付けて、<strong>「このショップではこういう状態」</strong>と共有する用途にも使えます。</p>
+
+  <h3>入力を全部やり直したいとき</h3>
+  <p>画面右上の <strong>「入力を全リセット」</strong> を押すと、現在の入力をすべて初期状態に戻せます。</p>
+  <ul>
+    <li>所持金</li>
+    <li>商品価格</li>
+    <li>購入チェック</li>
+    <li>会員カード・配達人の設定</li>
+    <li>商品名の変更</li>
+    <li>増やした商品入力欄</li>
+  </ul>
+  <p>などがまとめてリセットされます。</p>
+
+  <h3>このツールでやりたいこと</h3>
+  <p>要するに、</p>
+  <pre>「ショップを見ながら、価格を打ち込んで、買いたいものにチェックを入れるだけ。
+あとはツールが計算してくれる」</pre>
+  <p>というツールです。</p>
+  <p>特にSTS2のマルチプレイなどで、</p>
+  <p><strong>「これ買ったら残りいくら？」<br>
+  「会員カードを買って割引を得たら、さらに何が買える？」<br>
+  「この商品とこれを両方買っても大丈夫？」</strong></p>
+  <p>といった計算を頭の中でする代わりに、<strong>ショップ画面の情報をそのまま入力して確認する</strong>ことを目的にしています。</p>
+  <p>ブラウザ上で動作するため、インストールやアカウント登録などは必要ありません。</p>
+
+  <button type="button" id="helpClose" class="help-close">▲ 使い方を閉じる</button>
+</div>
+
 
 <div class="card top-grid">
   <div>
@@ -376,6 +575,27 @@ document.addEventListener("click", event => {
   input.addEventListener("blur", () => finish(true));
 });
 
+
+
+const helpToggle=document.getElementById("helpToggle");
+const helpPanel=document.getElementById("helpPanel");
+const helpClose=document.getElementById("helpClose");
+
+function setHelpOpen(open){
+  helpPanel.classList.toggle("open",open);
+  helpPanel.setAttribute("aria-hidden",String(!open));
+  helpToggle.setAttribute("aria-expanded",String(open));
+  helpToggle.textContent=open ? "使い方を折りたたむ" : "使い方";
+}
+
+helpToggle.addEventListener("click",()=>{
+  setHelpOpen(!helpPanel.classList.contains("open"));
+});
+
+helpClose.addEventListener("click",()=>{
+  setHelpOpen(false);
+  helpToggle.scrollIntoView({behavior:"smooth",block:"nearest"});
+});
 
 document.getElementById("resetAll").addEventListener("click", () => {
   if(!confirm("入力内容をすべてリセットしますか？")) return;
