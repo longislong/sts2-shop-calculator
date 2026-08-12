@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STS2 ショップ計算機 v8</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;background:#f3f4f6;color:#111827}
+.container{max-width:900px;margin:0 auto;padding:16px}
+h1{margin:0 0 12px;font-size:1.5rem}
+.card{background:white;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.top-grid{display:grid;grid-template-columns:1fr;gap:12px}
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+  gap:12px;
+}
+.reset-button{
+  background:#ef4444;
+  color:white;
+  border:none;
+  border-radius:8px;
+  padding:10px 14px;
+  font-size:.95rem;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.reset-button:hover{
+  background:#dc2626;
+}
+
+@media (min-width:700px){.top-grid{grid-template-columns:1fr 1fr}}
+label{display:block;margin-bottom:6px;font-weight:600}
+input[type=number]{width:100%;box-sizing:border-box;padding:10px;font-size:1rem;border:1px solid #d1d5db;border-radius:8px}
+.gold-input{
+  font-size:2rem !important;
+  font-weight:700;
+  background:#eef6ff;
+  border:2px solid #93c5fd !important;
+  padding:12px !important;
+}
+.gold-input:focus{
+  outline:none;
+  border-color:#60a5fa !important;
+  box-shadow:0 0 0 3px rgba(96,165,250,.2);
+}
+.checkrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.checkrow label{margin:0;font-weight:500;display:flex;align-items:center;gap:8px}
+.discount-price{width:110px}
+.subnote{margin-left:28px;margin-bottom:10px;font-size:.9rem;color:#065f46;font-weight:600}
+.hidden{display:none}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center}
+.summary-box{background:#f9fafb;border-radius:10px;padding:12px}
+.summary-box .value{font-size:1.3rem;font-weight:700;line-height:1.4}
+.ok{color:#047857}.ng{color:#b91c1c}
+.detail{margin-top:6px;font-size:.85rem;color:#374151}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:center}
+th{background:#f3f4f6}td:first-child{text-align:left}
+.item-name{
+  cursor:pointer;
+  display:inline-block;
+  min-width:120px;
+  padding:2px 4px;
+  border-radius:4px;
+}
+.item-name:hover{
+  background:#f3f4f6;
+  text-decoration:underline;
+}
+.name-editor{
+  width:100%;
+  box-sizing:border-box;
+  padding:4px 6px;
+  font-size:.95rem;
+}
+tr.can-buy{background:#ecfeff}tr.cannot-buy{background:#f9fafb;color:#9ca3af}
+.section{background:#fef3c7;font-weight:700}
+.buy{transform:scale(1.5);cursor:pointer}
+td:last-child{padding:14px 8px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="top-bar">
+<h1>STS2 ショップ計算機 v16</h1>
+<button type="button" id="resetAll" class="reset-button">入力を全リセット</button>
+</div>
+
+<div class="card top-grid">
+  <div>
+    <label>所持金</label>
+    <input type="number" id="gold" class="gold-input" placeholder="0" min="0">
+  </div>
+  <div>
+    <div class="checkrow">
+      <label><input type="checkbox" id="buyMember"> 店で会員カードを購入</label>
+      <input type="number" id="buyMemberPrice" class="discount-price" placeholder="0" min="0">
+    </div>
+    <div class="checkrow">
+      <label><input type="checkbox" id="buyCourier"> 店で配達人を購入</label>
+      <input type="number" id="buyCourierPrice" class="discount-price" placeholder="0" min="0">
+    </div>
+    <div class="subnote hidden" id="courierDiscountView">会員カード割引適用後：0 G</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="summary">
+    <div class="summary-box"><div>初期所持金</div><div class="value" id="goldView">0</div></div>
+    <div class="summary-box"><div>商品合計</div><div class="value" id="itemTotalDisplay">0 G</div><div class="detail" id="itemTotalDetail">0</div></div>
+    <div class="summary-box"><div>残金</div><div class="value ok" id="remain">0</div></div>
+  </div>
+</div>
+
+<div class="card">
+<table>
+<thead><tr><th>種類</th><th>価格</th><th>割引後</th><th>購入</th></tr></thead>
+<tbody id="shopBody"></tbody>
+</table>
+</div>
+
+<!-- 下までスクロールしても計算結果を確認できるように同じ表示を配置 -->
+<div class="card">
+  <div class="summary">
+    <div class="summary-box"><div>初期所持金</div><div class="value" id="goldViewBottom">0</div></div>
+    <div class="summary-box"><div>商品合計</div><div class="value" id="itemTotalDisplayBottom">0 G</div><div class="detail" id="itemTotalDetailBottom">0</div></div>
+    <div class="summary-box"><div>残金</div><div class="value ok" id="remainBottom">0</div></div>
+  </div>
+</div>
+</div>
+
+<script>
+const categories=[
+  {name:"通常カード",key:"cards",dynamic:true},
+  {name:"無色カード",key:"colorless",dynamic:true},
+  {name:"レリック",key:"relics",dynamic:true},
+  {name:"ポーション",key:"potions",dynamic:true},
+  {name:"その他",key:"other",dynamic:false}
+];
+
+const body=document.getElementById("shopBody");
+
+function createSection(category){
+  const tr=document.createElement("tr");
+  tr.className="section";
+  tr.dataset.section=category.key;
+  tr.innerHTML=`<td colspan="4">${category.name}</td>`;
+  body.appendChild(tr);
+}
+
+function createItemRow(category, beforeNode=null){
+  const tr=document.createElement("tr");
+  tr.className="item-row";
+  tr.dataset.category=category.key;
+  tr.innerHTML=`<td><span class="item-name"></span></td><td><input type="number" placeholder="0" min="0" class="price"></td><td class="discounted">0</td><td><input type="checkbox" class="buy"></td>`;
+
+  if(beforeNode){
+    body.insertBefore(tr, beforeNode);
+  }else{
+    // カテゴリの直後に挿入する。次のカテゴリを飛び越えない。
+    const nextSection=document.querySelector(`tr.section[data-section="${category.key}"]`)?.nextElementSibling;
+    const categoryRows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${category.key}"]`));
+    const last=categoryRows[categoryRows.length-1];
+    if(last && last.nextSibling){
+      body.insertBefore(tr,last.nextSibling);
+    }else if(last){
+      body.appendChild(tr);
+    }else if(nextSection){
+      body.insertBefore(tr,nextSection);
+    }else{
+      body.appendChild(tr);
+    }
+  }
+
+  renumberCategory(category.key);
+  return tr;
+}
+
+function renumberCategory(key){
+  const rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${key}"]`));
+  const category=categories.find(c=>c.key===key);
+
+  rows.forEach((tr,i)=>{
+    const defaultName = key==="other" ? "カード削除" : `${category.name}${i+1}`;
+    tr.dataset.defaultName = defaultName;
+
+    if(!tr.dataset.customName){
+      tr.querySelector(".item-name").textContent = defaultName;
+    }
+  });
+}
+
+categories.forEach(c=>{
+  createSection(c);
+  createItemRow(c);
+});
+
+
+function addCategoryRow(category){
+  const rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${category.key}"]`));
+  const last=rows[rows.length-1];
+  if(last && last.nextSibling){
+    return createItemRow(category,last.nextSibling);
+  }
+  const section=document.querySelector(`tr.section[data-section="${category.key}"]`);
+  return createItemRow(category, section ? section.nextSibling : null);
+}
+
+function syncCategoryRows(category){
+  let rows=Array.from(document.querySelectorAll(`tr.item-row[data-category="${category.key}"]`));
+
+  // 動的カテゴリは常に「最後に空欄を1枠」だけ置く。
+  // 余分な空欄がある場合だけ、末尾から削除する。
+  while(rows.length > 1){
+    const last = rows[rows.length - 1];
+    const prev = rows[rows.length - 2];
+
+    if(Number(last.querySelector(".price").value || 0) === 0 &&
+       Number(prev.querySelector(".price").value || 0) === 0){
+      last.remove();
+      rows = Array.from(document.querySelectorAll(`tr.item-row[data-category="${category.key}"]`));
+    }else{
+      break;
+    }
+  }
+
+  const last = rows[rows.length - 1];
+  if(Number(last.querySelector(".price").value || 0) > 0){
+    addCategoryRow(category);
+  }
+
+  renumberCategory(category.key);
+}
+
+function getCourierPurchasePrice(){
+  const base=Number(document.getElementById("buyCourierPrice").value||0);
+  return document.getElementById("buyMember").checked?Math.floor(base*.5):base;
+}
+function getDiscountRate(){
+  let rate=1;
+  if(document.getElementById("buyMember").checked)rate*=.5;
+  if(document.getElementById("buyCourier").checked)rate*=.8;
+  return rate;
+}
+
+// アイテム名クリックで編集
+document.addEventListener("click", event => {
+  const span = event.target.closest(".item-name");
+  if(!span) return;
+
+  const row = span.closest("tr.item-row");
+  if(!row) return;
+
+  // 既に編集中なら何もしない
+  if(row.querySelector(".name-editor")) return;
+
+  const current = row.dataset.customName || "";
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "name-editor";
+  input.value = current;
+  input.placeholder = row.dataset.defaultName || "";
+
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const finish = (commit=true) => {
+    let value = commit ? input.value.trim() : current;
+
+    if(value === ""){
+      row.dataset.customName = "";
+      value = row.dataset.defaultName || "";
+    }else{
+      row.dataset.customName = value;
+    }
+
+    const newSpan = document.createElement("span");
+    newSpan.className = "item-name";
+    newSpan.textContent = value;
+    input.replaceWith(newSpan);
+  };
+
+  input.addEventListener("keydown", e => {
+    if(e.key === "Enter"){
+      finish(true);
+    }else if(e.key === "Escape"){
+      finish(false);
+    }
+  });
+
+  input.addEventListener("blur", () => finish(true));
+});
+
+
+document.getElementById("resetAll").addEventListener("click", () => {
+  if(!confirm("入力内容をすべてリセットしますか？")) return;
+
+  document.getElementById("gold").value = "";
+
+  document.getElementById("buyMember").checked = false;
+  document.getElementById("buyCourier").checked = false;
+  document.getElementById("buyMemberPrice").value = "";
+  document.getElementById("buyCourierPrice").value = "";
+
+  categories.forEach(category => {
+    const rows = Array.from(document.querySelectorAll(`tr.item-row[data-category="${category.key}"]`));
+
+    rows.forEach((row, index) => {
+      row.querySelector(".price").value = "";
+      row.querySelector(".buy").checked = false;
+
+      row.dataset.customName = "";
+
+      const nameEl = row.querySelector(".item-name");
+      if(nameEl){
+        nameEl.textContent = row.dataset.defaultName || "";
+      }
+
+      if(category.dynamic && index > 0){
+        row.remove();
+      }
+    });
+
+    renumberCategory(category.key);
+  });
+
+  document.getElementById("courierDiscountView").classList.add("hidden");
+
+  recalc();
+  document.getElementById("gold").focus();
+});
+
+function recalc(){
+  const gold=Number(document.getElementById("gold").value||0);
+  const buyMember=document.getElementById("buyMember").checked;
+  const buyCourier=document.getElementById("buyCourier").checked;
+  let relicTotal=0;
+  if(buyMember)relicTotal+=Number(document.getElementById("buyMemberPrice").value||0);
+  if(buyCourier)relicTotal+=getCourierPurchasePrice();
+
+  const courierView=document.getElementById("courierDiscountView");
+  if(buyMember&&buyCourier){
+    courierView.textContent=`会員カード割引適用後：${getCourierPurchasePrice()} G`;
+    courierView.classList.remove("hidden");
+  }else courierView.classList.add("hidden");
+
+  const rate=getDiscountRate();
+  let selectedItemTotal=0;
+  const remainAfterRelics=gold-relicTotal;
+
+  const hasGoldInput=document.getElementById("gold").value.trim() !== "";
+
+  document.querySelectorAll("#shopBody tr.item-row").forEach(tr=>{
+    const input=tr.querySelector(".price");if(!input)return;
+    const price=Number(input.value||0);
+    const discounted=Math.floor(price*rate);
+    tr.querySelector(".discounted").textContent=discounted;
+
+    // 所持金が未入力の間は購入可否の色判定をしない。
+    // 所持金を入力したら、従来どおり購入可能/不可能を色で表示する。
+    if(hasGoldInput){
+      if(discounted<=remainAfterRelics){
+        tr.classList.add("can-buy");tr.classList.remove("cannot-buy");
+      }else{
+        tr.classList.remove("can-buy");tr.classList.add("cannot-buy");
+      }
+    }else{
+      tr.classList.remove("can-buy","cannot-buy");
+    }
+
+    if(tr.querySelector(".buy").checked)selectedItemTotal+=discounted;
+  });
+
+  const grandTotal=selectedItemTotal+relicTotal;
+  const remain=gold-grandTotal;
+  const detail=relicTotal>0?`${selectedItemTotal} + ${relicTotal} (割引レリック価格) = ${grandTotal}`:`${selectedItemTotal}`;
+
+  document.getElementById("goldView").textContent=gold;
+  document.getElementById("itemTotalDisplay").textContent=`${grandTotal}`;
+  document.getElementById("itemTotalDetail").textContent=detail;
+  document.getElementById("goldViewBottom").textContent=gold;
+  document.getElementById("itemTotalDisplayBottom").textContent=`${grandTotal}`;
+  document.getElementById("itemTotalDetailBottom").textContent=detail;
+
+  [document.getElementById("remain"),document.getElementById("remainBottom")].forEach(el=>{
+    el.textContent=remain;el.classList.toggle("ok",remain>=0);el.classList.toggle("ng",remain<0);
+  });
+}
+
+/* 価格欄ではTabで購入チェックを飛ばし、次の商品価格へ移動 */
+document.addEventListener("keydown",event=>{
+  if(event.key!=="Tab"||!event.target.classList.contains("price"))return;
+  const prices=Array.from(document.querySelectorAll("#shopBody .price"));
+  const i=prices.indexOf(event.target);
+  if(i>=0&&i<prices.length-1){
+    event.preventDefault();
+    prices[i+1].focus();
+    prices[i+1].select();
+  }
+});
+
+document.addEventListener("input",event=>{
+  if(event.target.classList.contains("price")){
+    const row = event.target.closest("tr.item-row");
+    const category = categories.find(c => c.key === row.dataset.category);
+    if(category && category.dynamic){
+      syncCategoryRows(category);
+    }
+  }
+  recalc();
+});
+
+// 価格欄のTabは購入チェックを飛ばして次の価格欄へ。
+document.addEventListener("keydown",event=>{
+  if(event.key!=="Tab"||!event.target.classList.contains("price"))return;
+  const prices=Array.from(document.querySelectorAll("#shopBody .price"));
+  const i=prices.indexOf(event.target);
+  if(!event.shiftKey && i>=0 && i<prices.length-1){
+    event.preventDefault();
+    prices[i+1].focus();
+    prices[i+1].select();
+  }else if(event.shiftKey && i>0){
+    event.preventDefault();
+    prices[i-1].focus();
+    prices[i-1].select();
+  }
+});
+
+document.addEventListener("input",recalc);
+document.addEventListener("change",recalc);
+recalc();
+</script>
+</body>
+</html>
